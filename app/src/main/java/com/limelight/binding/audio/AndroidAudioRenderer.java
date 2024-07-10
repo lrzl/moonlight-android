@@ -135,8 +135,8 @@ public class AndroidAudioRenderer implements AudioRenderer {
                 case 3:
                     // Try the larger buffer size
                     bufferSize = Math.max(AudioTrack.getMinBufferSize(sampleRate,
-                            channelConfig,
-                            AudioFormat.ENCODING_PCM_16BIT),
+                                    channelConfig,
+                                    AudioFormat.ENCODING_PCM_16BIT),
                             bytesPerFrame * 2);
 
                     // Round to next frame
@@ -179,7 +179,7 @@ public class AndroidAudioRenderer implements AudioRenderer {
 
         if (track == null) {
             // Couldn't create any audio track for playback
-            return -2;
+            return 0;
         }
 
         return 0;
@@ -187,6 +187,9 @@ public class AndroidAudioRenderer implements AudioRenderer {
 
     @Override
     public void playDecodedAudio(short[] audioData) {
+        if(track == null){
+            return;
+        }
         // Only queue up to 40 ms of pending audio data in addition to what AudioTrack is buffering for us.
         if (MoonBridge.getPendingAudioDuration() < 40) {
             // This will block until the write is completed. That can cause a backlog
@@ -225,9 +228,11 @@ public class AndroidAudioRenderer implements AudioRenderer {
     @Override
     public void cleanup() {
         // Immediately drop all pending data
-        track.pause();
-        track.flush();
+        if(track != null){
+            track.pause();
+            track.flush();
+            track.release();
+        }
 
-        track.release();
     }
 }
